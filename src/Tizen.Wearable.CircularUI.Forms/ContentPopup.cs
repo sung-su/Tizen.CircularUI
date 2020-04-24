@@ -47,6 +47,12 @@ namespace Tizen.Wearable.CircularUI.Forms
         public static readonly BindableProperty IsShowProperty = BindableProperty.Create(nameof(IsShow), typeof(bool), typeof(ContentPopup), false, propertyChanged:(b, o, n) => ((ContentPopup)b).UpdateRenderer());
 
         /// <summary>
+        /// BindableProperty. Identifies the RotaryFocusObject bindable property Key.
+        /// </summary>
+        /// <since_tizen> 4 </since_tizen>
+        public static readonly BindableProperty RotaryFocusObjectProperty = BindableProperty.Create(nameof(RotaryFocusObject), typeof(IRotaryFocusable), typeof(ContentPopup), null);
+
+        /// <summary>
         /// Occurs when the device's back button is pressed.
         /// </summary>
         /// <since_tizen> 4 </since_tizen>
@@ -57,6 +63,16 @@ namespace Tizen.Wearable.CircularUI.Forms
         /// </summary>
         /// <since_tizen> 4 </since_tizen>
         public event EventHandler Dismissed;
+
+        /// <summary>
+        /// Gets or sets object of RotaryFocusObject to receive bezel action(take a rotary event).
+        /// </summary>
+        /// <since_tizen> 4 </since_tizen>
+        public IRotaryFocusable RotaryFocusObject
+        {
+            get => (IRotaryFocusable)GetValue(RotaryFocusObjectProperty);
+            set => SetValue(RotaryFocusObjectProperty, value);
+        }
 
         /// <summary>
         /// Gets or sets content view of the Popup.

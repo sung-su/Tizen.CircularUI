@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
+using ElmSharp.Wearable;
 using System;
 using System.ComponentModel;
-using Tizen.Wearable.CircularUI.Forms;
-using Tizen.Wearable.CircularUI.Forms.Renderer;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Tizen;
+using ERotaryEventManager = ElmSharp.Wearable.RotaryEventManager;
 using XForms = Xamarin.Forms.Forms;
-
-[assembly: ExportRenderer(typeof(ContentPopup), typeof(ContentPopupRenderer))]
 
 namespace Tizen.Wearable.CircularUI.Forms.Renderer
 {
@@ -30,6 +28,7 @@ namespace Tizen.Wearable.CircularUI.Forms.Renderer
     {
         ElmSharp.Popup _popup;
         ContentPopup _element;
+        IRotaryFocusable _currentRotaryFocusObject;
 
         public void SetElement(Element element)
         {
@@ -40,6 +39,7 @@ namespace Tizen.Wearable.CircularUI.Forms.Renderer
 
             UpdateContent();
             UpdateIsShow();
+            UpdateRotaryFocusObject();
         }
 
         public ContentPopupRenderer()
@@ -72,6 +72,20 @@ namespace Tizen.Wearable.CircularUI.Forms.Renderer
             _popup?.Show();
         }
 
+        public void UpdateRotaryFocusObject()
+        {
+            if (_currentRotaryFocusObject == null)
+            {
+                _currentRotaryFocusObject = _element.RotaryFocusObject;
+            }
+            else
+            {
+                DeactivateRotaryWidget();
+                _currentRotaryFocusObject = _element.RotaryFocusObject;
+                ActivateRotaryWidget();
+            }
+        }
+
         protected void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == ContentPopup.ContentProperty.PropertyName)
@@ -81,6 +95,10 @@ namespace Tizen.Wearable.CircularUI.Forms.Renderer
             if (e.PropertyName == ContentPopup.IsShowProperty.PropertyName)
             {
                 UpdateIsShow();
+            }
+            if (e.PropertyName == ContentPopup.RotaryFocusObjectProperty.PropertyName)
+            {
+                UpdateRotaryFocusObject();
             }
         }
 
@@ -136,6 +154,49 @@ namespace Tizen.Wearable.CircularUI.Forms.Renderer
                 Show();
             else
                 Dismiss();
+        }
+
+        IRotaryActionWidget GetRotaryWidget(IRotaryFocusable focusable)
+        {
+            var consumer = focusable as BindableObject;
+            IRotaryActionWidget rotaryWidget = null;
+            if (consumer != null)
+            {
+                var consumerRenderer = Platform.GetRenderer(consumer);
+                rotaryWidget = consumerRenderer?.NativeView as IRotaryActionWidget;
+            }
+            return rotaryWidget;
+        }
+
+        void ActivateRotaryWidget()
+        {
+            if (_currentRotaryFocusObject is IRotaryEventReceiver)
+            {
+                ERotaryEventManager.Rotated += OnRotaryEventChanged;
+            }
+            else if (_currentRotaryFocusObject is IRotaryFocusable)
+            {
+                GetRotaryWidget(_currentRotaryFocusObject)?.Activate();
+            }
+        }
+        void DeactivateRotaryWidget()
+        {
+            if (_currentRotaryFocusObject is IRotaryEventReceiver)
+            {
+                ERotaryEventManager.Rotated -= OnRotaryEventChanged;
+            }
+            else if (_currentRotaryFocusObject is IRotaryFocusable)
+            {
+                GetRotaryWidget(_currentRotaryFocusObject)?.Deactivate();
+            }
+        }
+        void OnRotaryEventChanged(ElmSharp.Wearable.RotaryEventArgs e)
+        {
+            if (_currentRotaryFocusObject is IRotaryEventReceiver)
+            {
+                var receiver = _currentRotaryFocusObject as IRotaryEventReceiver;
+                receiver.Rotate(new RotaryEventArgs { IsClockwise = e.IsClockwise });
+            }
         }
     }
 }
