@@ -30,18 +30,6 @@ namespace Tizen.Wearable.CircularUI.Forms.Renderer
         ContentPopup _element;
         IRotaryFocusable _currentRotaryFocusObject;
 
-        public void SetElement(Element element)
-        {
-            if (element.Parent == null)
-                element.Parent = Application.Current;
-            element.PropertyChanged += OnElementPropertyChanged;
-            _element = element as ContentPopup;
-
-            UpdateContent();
-            UpdateIsShow();
-            UpdateRotaryFocusObject();
-        }
-
         public ContentPopupRenderer()
         {
             _popup = new ElmSharp.Popup(XForms.NativeParent);
@@ -50,6 +38,19 @@ namespace Tizen.Wearable.CircularUI.Forms.Renderer
             _popup.BackButtonPressed += OnBackButtonPressed;
             _popup.Dismissed += OnDismissed;
         }
+
+        public void SetElement(ContentPopup element)
+        {
+            if (element.Parent == null)
+                element.Parent = Application.Current;
+            element.PropertyChanged += OnElementPropertyChanged;
+            _element = element;
+
+            UpdateContent();
+            UpdateIsOpen();
+            UpdateRotaryFocusObject();
+        }
+
 
         ~ContentPopupRenderer()
         {
@@ -60,16 +61,6 @@ namespace Tizen.Wearable.CircularUI.Forms.Renderer
         {
             Dispose(true);
             GC.SuppressFinalize(this);
-        }
-
-        public void Dismiss()
-        {
-            _popup?.Hide();
-        }
-
-        public void Show()
-        {
-            _popup?.Show();
         }
 
         public void UpdateRotaryFocusObject()
@@ -92,9 +83,9 @@ namespace Tizen.Wearable.CircularUI.Forms.Renderer
             {
                 UpdateContent();
             }
-            if (e.PropertyName == ContentPopup.IsShowProperty.PropertyName)
+            if (e.PropertyName == ContentPopup.IsOpenProperty.PropertyName)
             {
-                UpdateIsShow();
+                UpdateIsOpen();
             }
             if (e.PropertyName == ContentPopup.RotaryFocusObjectProperty.PropertyName)
             {
@@ -129,7 +120,6 @@ namespace Tizen.Wearable.CircularUI.Forms.Renderer
         void OnDismissed(object sender, EventArgs e)
         {
             _element.SendDismissed();
-            Dispose();
         }
 
         void UpdateContent()
@@ -139,7 +129,7 @@ namespace Tizen.Wearable.CircularUI.Forms.Renderer
                 var renderer = Platform.GetOrCreateRenderer(_element.Content);
                 (renderer as LayoutRenderer)?.RegisterOnLayoutUpdated();
                 var native = renderer.NativeView;
-                native.MinimumHeight = 360;
+                native.MinimumHeight = XForms.NativeParent.Geometry.Height;
                 _popup.SetContent(native, false);
             }
             else
@@ -148,12 +138,12 @@ namespace Tizen.Wearable.CircularUI.Forms.Renderer
             }
         }
 
-        void UpdateIsShow()
+        void UpdateIsOpen()
         {
-            if (_element.IsShow)
-                Show();
+            if (_element.IsOpen)
+                _popup?.Show();
             else
-                Dismiss();
+                _popup?.Hide();
         }
 
         IRotaryActionWidget GetRotaryWidget(IRotaryFocusable focusable)

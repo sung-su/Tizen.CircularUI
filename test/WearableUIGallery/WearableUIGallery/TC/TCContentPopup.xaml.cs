@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Threading.Tasks;
 using Tizen.Wearable.CircularUI.Forms;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
@@ -29,53 +30,63 @@ namespace WearableUIGallery.TC
             InitializeComponent();
         }
 
-        private void OnContentPopupDismissBackKeyClicked(object sender, EventArgs e)
+        private async void OnContentPopupTest1Clicked(object sender, EventArgs e)
         {
-            ContentPopup _popup = new ContentPopup();
-            _popup.BackButtonPressed += (s, ee) =>
+            using (ContentPopup _popup = new ContentPopup())
             {
-                _popup?.Dismiss();
-                label1.Text = "Test1 Dismissed";
-            };
+                var label = new Label
+                {
+                    Text = "This ContentPopup is dismissed as a back key.",
+                    HorizontalTextAlignment = TextAlignment.Center,
+                };
 
-            string _longText = "This ContentPopup is dismissed as a back key.";
-            var content = new Label { Text = _longText, HorizontalTextAlignment = TextAlignment.Center };
+                _popup.BackButtonPressed += (s, ee) =>
+                {
+                    _popup?.Dismiss();
+                    label1.Text = "Test1 Dismissed";
+                };
+                _popup.Content = label;
 
-            _popup.Content = content;
-            _popup.Show();
+                //TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
+                //_popup.Dismissed += (s, evt) => tcs.SetResult(true);
+                await _popup.Open();
+            }
         }
 
-        private void OnContentPopupDismissButtonClicked(object sender, EventArgs e)
+        private async void OnContentPopupTest2Clicked(object sender, EventArgs e)
         {
-            ContentPopup _popup = new ContentPopup();
-            var dismiss = new Button
+            using (ContentPopup _popup = new ContentPopup())
             {
-                Text = "Dismiss",
-            };
-            dismiss.Clicked += (s, ee) => {
-                _popup?.Dismiss();
-                label1.Text = "Test2 Dismissed";
-            };
+                var dismiss = new Button
+                {
+                    Text = "Dismiss",
+                };
+                dismiss.Clicked += (s, ee) =>
+                {
+                    _popup?.Dismiss();
+                    label1.Text = "Test2 Dismissed";
+                };
+                var label = new Label
+                {
+                    Text = "This ContentPopup is dismissed as a below dismiss button.",
+                    HorizontalTextAlignment = TextAlignment.Center,
+                };
 
-            var label = new Label
-            {
-                Text = "This ContentPopup is dismissed as a below dismiss button.",
-                HorizontalTextAlignment = TextAlignment.Center,
-            };
+                var grid = new Grid();
+                grid.HeightRequest = 360;
+                grid.WidthRequest = 360;
+                grid.RowDefinitions.Add(new RowDefinition());
+                grid.RowDefinitions.Add(new RowDefinition());
+                grid.RowDefinitions.Add(new RowDefinition());
+                grid.RowDefinitions.Add(new RowDefinition());
+                grid.RowDefinitions.Add(new RowDefinition());
+                grid.Children.Add(label, 0, 1, 1, 3);
+                grid.Children.Add(dismiss, 0, 1, 3, 4);
 
-            var grid = new Grid();
-            grid.HeightRequest = 360;
-            grid.WidthRequest = 360;
-            grid.RowDefinitions.Add(new RowDefinition());
-            grid.RowDefinitions.Add(new RowDefinition());
-            grid.RowDefinitions.Add(new RowDefinition());
-            grid.RowDefinitions.Add(new RowDefinition());
-            grid.RowDefinitions.Add(new RowDefinition());
-            grid.Children.Add(label, 0, 1, 1, 3);
-            grid.Children.Add(dismiss, 0, 1, 3, 4);
+                _popup.Content = grid;
 
-            _popup.Content = grid;
-            _popup.Show();
+                await _popup.Open();
+            }
         }
     }
 }

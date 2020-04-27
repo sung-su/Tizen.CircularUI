@@ -29,6 +29,6 @@ namespace Tizen.Wearable.CircularUI.Forms
         /// Sets the Element associated with this renderer.
         /// </summary>
         /// <param name="element">New element.</param>
-        void SetElement(Element element);
+        void SetElement(ContentPopup element);
     }
 }

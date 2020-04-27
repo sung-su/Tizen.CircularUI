@@ -16,6 +16,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using Xamarin.Forms;
 
 namespace Tizen.Wearable.CircularUI.Forms
@@ -27,12 +28,13 @@ namespace Tizen.Wearable.CircularUI.Forms
     public class ContentPopup : Element, IDisposable
     {
         IContentPopupRenderer _renderer;
+        TaskCompletionSource<bool> _tcsForDismiss;
 
         /// <summary>
         /// For internal use.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static Func<IContentPopupRenderer> RendererFunc { get; set; } = null;
+        public static Func<IContentPopupRenderer> CreateRenderer { get; set; } = null;
 
         /// <summary>
         /// BindableProperty. Identifies the Content bindable property.
@@ -44,7 +46,7 @@ namespace Tizen.Wearable.CircularUI.Forms
         /// BindableProperty. Identifies the IsShow bindable property.
         /// </summary>
         /// <since_tizen> 4 </since_tizen>
-        public static readonly BindableProperty IsShowProperty = BindableProperty.Create(nameof(IsShow), typeof(bool), typeof(ContentPopup), false, propertyChanged:(b, o, n) => ((ContentPopup)b).UpdateRenderer());
+        public static readonly BindableProperty IsOpenProperty = BindableProperty.Create(nameof(IsOpen), typeof(bool), typeof(ContentPopup), false, propertyChanged:(b, o, n) => ((ContentPopup)b).UpdateRenderer());
 
         /// <summary>
         /// BindableProperty. Identifies the RotaryFocusObject bindable property Key.
@@ -88,19 +90,21 @@ namespace Tizen.Wearable.CircularUI.Forms
         /// Gets or sets the popup is shown.
         /// </summary>
         /// <since_tizen> 4 </since_tizen>
-        public bool IsShow
+        public bool IsOpen
         {
-            get { return (bool)GetValue(IsShowProperty); }
-            set { SetValue(IsShowProperty, value); }
+            get { return (bool)GetValue(IsOpenProperty); }
+            set { SetValue(IsOpenProperty, value); }
         }
 
         /// <summary>
         /// Shows the popup.
         /// </summary>
         /// <since_tizen> 4 </since_tizen>
-        public void Show()
+        public Task Open()
         {
-            IsShow = true;
+            IsOpen = true;
+            _tcsForDismiss = new TaskCompletionSource<bool>();
+            return _tcsForDismiss.Task;
         }
 
         /// <summary>
@@ -109,7 +113,7 @@ namespace Tizen.Wearable.CircularUI.Forms
         /// <since_tizen> 4 </since_tizen>
         public void Dismiss()
         {
-            IsShow = false;
+            IsOpen = false;
         }
 
         /// <summary>
@@ -119,6 +123,7 @@ namespace Tizen.Wearable.CircularUI.Forms
         public void SendDismissed()
         {
             Dismissed?.Invoke(this, EventArgs.Empty);
+            _tcsForDismiss?.TrySetResult(true);
         }
 
         /// <summary>
@@ -165,10 +170,9 @@ namespace Tizen.Wearable.CircularUI.Forms
         {
             if (_renderer == null)
             {
-                _renderer = RendererFunc();
+                _renderer = CreateRenderer();
                 _renderer.SetElement(this);
             }
         }
-
     }
 }
